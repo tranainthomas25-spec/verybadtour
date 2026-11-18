@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>VeryBadTour</title>
+<meta name="theme-color" content="#1d4f91">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#f3ead8; --card:#fffaf0; --card2:#efe4cf; --line:#dccdb0;
+  --txt:#1c2b45; --mute:#7a6e58; --a:#1d4f91; --b:#3a9ad9; --ok:#2e9e62; --ko:#d9534f; --head:#1d4f91;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+header{position:sticky;top:0;z-index:5;background:linear-gradient(180deg,#1d4f91,#163f75);color:#fff;padding:14px 16px 12px;border-bottom:3px solid #d9c49c}
+header h1{margin:0;font-size:20px;letter-spacing:.3px;display:flex;align-items:center;gap:8px}
+header h1 span{color:#e9d6ac}
+header p{margin:2px 0 0;color:#cfdcef;font-size:12.5px}
+main{max-width:640px;margin:0 auto;padding:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(80,60,20,.07)}
+.card h2{font-size:15px;margin:0 0 10px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+label{display:block;font-size:13px;color:var(--mute);margin:8px 0 4px}
+select,input{width:100%;background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:15px}
+input[type=number]{appearance:textfield}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--card2);color:var(--txt);border-radius:999px;padding:7px 12px;font-size:13.5px;cursor:pointer}
+.chip.on{background:var(--a);color:#fff;border-color:var(--a);font-weight:700}
+.pl{border-left:4px solid var(--a);padding-left:10px}
+.pl.b{border-left-color:var(--b)}
+.pl h3{margin:0 0 4px;font-size:16px}
+.form{display:flex;gap:6px}
+.form button{flex:1;height:38px;border-radius:9px;border:1px solid var(--line);background:var(--card2);color:var(--mute);font-weight:700;font-size:14px}
+.form button.V{background:var(--ok);color:#fff;border-color:var(--ok)}
+.form button.D{background:var(--ko);color:#fff;border-color:var(--ko)}
+.hint{font-size:11.5px;color:var(--mute);margin-top:4px}
+.btn{width:100%;border:0;border-radius:12px;padding:13px;font-size:16px;font-weight:700;background:var(--a);color:#fff;cursor:pointer}
+.btn.sec{background:var(--card2);color:var(--txt);border:1px solid var(--line)}
+.btn.small{width:auto;padding:8px 12px;font-size:13px}
+.res .names{display:flex;justify-content:space-between;font-weight:700;font-size:15px;gap:10px}
+.res .names div:last-child{text-align:right}
+.big{display:flex;justify-content:space-between;align-items:baseline;margin:6px 0}
+.big b{font-size:38px}
+.big b.a{color:var(--a)} .big b.b{color:var(--b)}
+.bar{height:14px;border-radius:8px;overflow:hidden;display:flex;background:var(--card2)}
+.bar i{display:block;height:100%}
+.bar .ia{background:var(--a)} .bar .ib{background:var(--b)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:7px 4px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--mute);font-weight:600;font-size:12.5px}
+td.n,th.n{text-align:right}
+.pos{color:var(--ok)} .neg{color:var(--ko)}
+.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700}
+.badge.ok{background:rgba(46,158,98,.14);color:var(--ok)}
+.badge.ko{background:rgba(217,83,79,.13);color:var(--ko)}
+.badge.mid{background:rgba(29,79,145,.12);color:var(--a)}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fffaf0;border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:9}
+nav button{flex:1;background:none;border:0;color:var(--mute);padding:10px 0 12px;font-size:12px;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav button .ic{font-size:20px}
+nav button.on{color:var(--a)}
+.hide{display:none}
+.hist{border-bottom:1px solid var(--line);padding:10px 0}
+.hist:last-child{border-bottom:0}
+.hist .t{font-size:12px;color:var(--mute)}
+.hist .m{font-weight:700;margin:3px 0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.stats div{background:var(--card2);border-radius:12px;padding:10px 4px}
+.stats b{display:block;font-size:22px;color:var(--a)}
+.stats span{font-size:11.5px;color:var(--mute)}
+.plrow{display:grid;grid-template-columns:1fr 54px 76px 28px;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.plrow input{padding:7px}
+.x{background:none;border:0;color:var(--ko);font-size:20px}
+.fac{display:grid;grid-template-columns:1fr 60px;font-size:13.5px;padding:5px 0;border-bottom:1px dashed var(--line)}
+.fac span:last-child{text-align:right;font-weight:700}
+input[type=range]{padding:0;height:30px;background:none;border:0;accent-color:var(--a)}
+</style>
+</head>
+<body>
+<header>
+  <h1>🏸 VeryBad<span>Tour</span></h1>
+  <p>Pourcentages de victoire des matchs de badminton</p>
+</header>
+
+<main>
+<!-- ============ ONGLET PRONO ============ -->
+<section id="tab-prono" class="hide">
+  <div class="card">
+    <h2>Le match</h2>
+    <label>Tableau</label>
+    <div class="chips" id="disc"></div>
+    <div class="row">
+      <div><label>Niveau du tournoi</label>
+        <select id="level">
+          <option value="1">Super 1000 / Finals</option>
+          <option value="1" selected>Super 750</option>
+          <option value="0.95">Super 500</option>
+          <option value="0.9">Super 300</option>
+          <option value="0.85">Super 100 / autre</option>
+        </select></div>
+      <div><label>Tour</label>
+        <select id="round">
+          <option>1er tour</option><option>2e tour</option><option>Quart</option><option>Demi</option><option>Finale</option><option>Poules</option>
+        </select></div>
+    </div>
+  </div>
+
+  <div class="card pl" id="cardA"></div>
+  <div class="card pl b" id="cardB"></div>
+
+  <div class="card">
+    <h2>Confrontations directes</h2>
+    <div class="row">
+      <div><label id="h2hLA">Victoires A</label><input type="number" id="h2hA" min="0" value="0" inputmode="numeric"></div>
+      <div><label id="h2hLB">Victoires B</label><input type="number" id="h2hB" min="0" value="0" inputmode="numeric"></div>
+    </div>
+    <label>Qui joue à domicile ?</label>
+    <div class="chips" id="home"></div>
+    <label>Ton feeling (ajustement manuel)</label>
+    <input type="range" id="feel" min="-100" max="100" value="0" step="5">
+    <div class="hint" id="feelTxt">Neutre</div>
+  </div>
+
+  <div class="card">
+    <h2>Cotes du bookmaker (facultatif)</h2>
+    <div class="row">
+      <div><label id="oddLA">Cote A</label><input type="number" id="oddA" step="0.01" min="1" placeholder="ex : 1.45" inputmode="decimal"></div>
+      <div><label id="oddLB">Cote B</label><input type="number" id="oddB" step="0.01" min="1" placeholder="ex : 2.70" inputmode="decimal"></div>
+    </div>
+    <div class="hint">Les cotes ne servent PAS au calcul : elles servent juste à repérer les paris intéressants.</div>
+  </div>
+
+  <div class="card res" id="result"></div>
+  <button class="btn" id="save">💾 Enregistrer ce prono</button>
+  <div style="height:8px"></div>
+  <button class="btn sec" id="reset">↺ Nouveau match</button>
+</section>
+
+<!-- ============ ONGLET TOURNOI ============ -->
+<section id="tab-tour">
+  <div class="card">
+    <h2 id="tourNom"></h2>
+    <div class="hint" id="tourLieu" style="margin-top:-6px;margin-bottom:8px"></div>
+    <div class="chips" id="tourDisc"></div>
+    <div class="hint" style="margin-top:8px">Touche un match pour l'ouvrir dans le calculateur et ajouter forme, confrontations, fatigue et cotes.</div>
+  </div>
+  <div id="tourList"></div>
+</section>
+
+<!-- ============ ONGLET HISTORIQUE ============ -->
+<section id="tab-hist" class="hide">
+  <div class="card">
+    <h2>Mon bilan</h2>
+    <div class="stats" id="stats"></div>
+  </div>
+  <div class="card">
+    <h2>Mes pronos</h2>
+    <div id="histList"></div>
+  </div>
+</section>
+
+<!-- ============ ONGLET JOUEURS ============ -->
+<section id="tab-players" class="hide">
+  <div class="card">
+    <h2>Joueurs & classements</h2>
+    <div class="chips" id="disc2" style="margin-bottom:8px"></div>
+    <div class="hint" style="margin-bottom:8px">Top 30 officiel BWF de la semaine 47 (17/11/2026). Tu peux modifier rang et points quand le classement change : c'est gardé sur ton téléphone (bwfbadminton.com → Rankings).</div>
+    <div id="plList"></div>
+    <div class="plrow" style="border:0;margin-top:6px">
+      <input id="newName" placeholder="Nouveau joueur / paire">
+      <input id="newRank" type="number" placeholder="Rang" inputmode="numeric">
+      <span></span>
+      <button class="x" style="color:var(--ok)" id="addPl">＋</button>
+    </div>
+    <div style="height:8px"></div>
+    <button class="btn sec small" id="resetPl">Remettre la liste d'origine</button>
+  </div>
+  <div class="card">
+    <h2>Comment c'est calculé ?</h2>
+    <div style="font-size:13.5px;line-height:1.5;color:var(--mute)">
+      Chaque joueur reçoit une note de force (style Elo) à partir de ses <b>points au classement mondial BWF</b> (ou de son rang si tu n'as pas les points) : 1,5 fois plus de points ≈ 69 % de chances.
+      On ajoute ensuite des bonus/malus : <b>forme</b> sur les 5 derniers matchs (les plus récents comptent plus),
+      <b>confrontations directes</b>, <b>domicile</b>, <b>fatigue</b> (long match la veille), <b>retour de blessure</b>, et ton <b>feeling</b>.
+      L'écart de notes donne le % de victoire. Dans les petits tournois, les surprises sont plus fréquentes, donc les % sont resserrés vers 50 %.
+      On en déduit aussi les chances de chaque score (2-0, 2-1…) et la <b>cote juste</b> : si le bookmaker paie plus, c'est un pari « value ».
+    </div>
+  </div>
+</section>
+</main>
+
+<nav>
+  <button data-tab="tour" class="on"><span class="ic">🏆</span>Tournoi</button>
+  <button data-tab="prono"><span class="ic">🏸</span>Prono</button>
+  <button data-tab="hist"><span class="ic">📋</span>Historique</button>
+  <button data-tab="players"><span class="ic">👥</span>Joueurs</button>
+</nav>
+
+<script>
+/* ---------- Données de départ (classements indicatifs, modifiables) ---------- */
+const DISCS = {
+  SH:{nom:"Simple H", list:[["Christo POPOV", 1, 89932], ["Kunlavut VITIDSARN", 2, 89835], ["Anders ANTONSEN", 3, 85525], ["Victor LAI", 4, 84245], ["CHOU Tien Chen", 5, 82230], ["Alex LANIER", 6, 81565], ["SHI Yu Qi", 7, 79525], ["Jonatan CHRISTIE", 8, 78631], ["Kodai NARAOKA", 9, 75590], ["Alwi FARHAN", 10, 74069], ["Lakshya SEN", 11, 68503], ["LOH Kean Yew", 12, 68300], ["Toma Junior POPOV", 13, 66047], ["LIN Chun-Yi", 14, 62884], ["Koki WATANABE", 15, 62700], ["Yushi TANAKA", 16, 60025], ["LI Shi Feng", 17, 57383], ["Panitchaphon TEERARATSAKUL", 18, 57295], ["LEE Cheuk Yiu", 19, 56863], ["Jason GUNAWAN", 20, 55650], ["Yudai OKIMOTO", 21, 52304], ["Ayush SHETTY", 22, 52179], ["Moh. Zaki UBAIDILLAH", 23, 51331], ["CHI Yu Jen", 24, 49687], ["HU Zhe An", 25, 49156], ["NG Ka Long Angus", 26, 47999], ["Rasmus GEMKE", 27, 47924], ["Nhat NGUYEN", 28, 47501], ["WENG Hong Yang", 29, 47181], ["KIDAMBI Srikanth", 30, 46485]]},
+  SD:{nom:"Simple D", list:[["AN Se Young", 1, 122287], ["Akane YAMAGUCHI", 2, 103726], ["WANG Zhi Yi", 3, 101489], ["CHEN Yu Fei", 4, 87351], ["PUSARLA V. Sindhu", 5, 74421], ["Ratchanok INTANON", 6, 73386], ["Tomoka MIYAZAKI", 7, 71826], ["Pornpawee CHOCHUWONG", 8, 70277], ["Putri Kusuma WARDANI", 9, 69903], ["Nozomi OKUHARA", 10, 68560], ["HAN Yue", 11, 64698], ["Line CHRISTOPHERSEN", 12, 57940], ["KIM Ga Eun", 13, 57791], ["Hina AKECHI", 14, 54680], ["SIM Yu Jin", 15, 54544], ["Michelle LI", 16, 53277], ["LIN Hsiang Ti", 17, 53009], ["Line Højmark KJAERSFELDT", 18, 52533], ["Riko GUNJI", 19, 52183], ["Mia BLICHFELDT", 20, 49653], ["Tanvi SHARMA", 21, 49265], ["Pitchamon OPATNIPUTH", 22, 49168], ["Unnati HOODA", 23, 47980], ["CHIU Pin-Chian", 24, 47258], ["HUANG Yu-Hsun", 25, 45614], ["Supanida KATETHONG", 26, 45232], ["HAN Qian Xi", 27, 44671], ["NGUYEN Thuy Linh", 28, 44360], ["Karupathevan LETSHANAA", 29, 44292], ["Ashmita CHALIHA", 30, 42240]]},
+  DH:{nom:"Double H", list:[["KIM Won Ho / SEO Seung Jae", 1, 111499], ["Fajar ALFIAN / Muhammad Shohibul FIKRI", 2, 95153], ["LIANG Wei Keng / WANG Chang", 3, 95089], ["Aaron CHIA / SOH Wooi Yik", 4, 87504], ["GOH Sze Fei / Nur IZZUDDIN", 5, 80547], ["Satwiksairaj RANKIREDDY / Chirag SHETTY", 6, 74831], ["Sabar Karyaman GUTAMA / Moh Reza Pahlevi ISFAHANI", 7, 68746], ["Ben LANE / Sean VENDY", 8, 68241], ["MAN Wei Chong / TEE Kai Wun", 9, 67863], ["Takuro HOKI / Yugo KOBAYASHI", 10, 66460], ["KANG Min Hyuk / KI Dong Ju", 11, 63153], ["Daniel LUNDGAARD / Mads VESTERGAARD", 12, 63075], ["CHEN Bo Yang / LIU Yi", 13, 62715], ["Raymond INDRA / Nikolaus JOAQUIN", 14, 62086], ["LEE Jhe-Huei / YANG Po-Hsuan", 15, 54506], ["Kakeru KUMAGAI / Hiroki NISHI", 16, 52788], ["HU Ke Yuan / LIN Xiang Yi", 17, 52153], ["Leo Rolly CARNANDO / Daniel MARTHIN", 18, 51790], ["Christian Faust KJÆR / Rasmus KJÆR", 19, 50940], ["CHIU Hsiang Chieh / WANG Chi-Lin", 20, 50355], ["Fang-Chih LEE / Fang-Jen LEE", 21, 49971], ["KANG Khai Xing / Aaron TAI", 22, 49080], ["HE Ji Ting / REN Xiang Yu", 23, 48382], ["Hiroki OKAMURA / Kyohei YAMASHITA", 24, 47610], ["Christo POPOV / Toma Junior POPOV", 25, 47201], ["Kim ASTRUP / Anders Skaarup RASMUSSEN", 26, 47169], ["Peeratchai SUKPHUN / Pakkapon TEERARATSAKUL", 27, 44708], ["Junaidi ARIF / YAP Roy King", 28, 43634], ["CHEN Zhi Ray / LIN Yu Chieh", 29, 42710], ["CHEN ZHI YI / Presley SMITH", 30, 42435]]},
+  DD:{nom:"Double D", list:[["LIU Sheng Shu / TAN Ning", 1, 114167], ["BAEK Ha Na / LEE So Hee", 2, 100434], ["Yuki FUKUSHIMA / Mayu MATSUMOTO", 3, 95906], ["Pearly TAN / THINAAH Muralitharan", 4, 84650], ["Rin IWANAGA / Kie NAKANISHI", 5, 75814], ["HSU Yin-Hui / LIN Jhih Yun", 6, 67324], ["Rachel Allessya ROSE / Febi SETIANINGRUM", 7, 66056], ["Amallia Cahaya PRATIWI / Siti Fadia Silva RAMADHANTI", 8, 62803], ["Gabriela STOEVA / Stefani STOEVA", 9, 62556], ["Febriana Dwipuji KUSUMA / Meilysa Trias PUSPITASARI", 10, 62214], ["Sumire NAKADE / Miyu TAKAHASHI", 11, 60570], ["HSIEH Pei Shan / HUNG En-Tzu", 12, 59515], ["Rui HIROKAMI / Sayaka HOBARA", 13, 57960], ["Lauren LAM / Allison Quynh LEE", 14, 57539], ["Sayaka HIROTA / Ayako SAKURAMOTO", 15, 56120], ["BAO Li Jing / CAO Zi Han", 16, 55940], ["Hinata SUZUKI / Nao YAMAKITA", 17, 55387], ["HSU Ya Ching / SUNG Yu-Hsuan", 18, 53849], ["Treesa JOLLY / GAYATRI GOPICHAND PULLELA", 19, 53022], ["YEUNG Nga Ting / YEUNG Pui Lam", 20, 52794], ["LI Yi Jing / LUO Xu Min", 21, 50607], ["LUO Yi / WANG Ting Ge", 22, 48583], ["Kaho OSAWA / Mai TANABE", 23, 47550], ["KIM Yu Jung / LEE Yu Lim", 24, 47350], ["Francesca CORBETT / Jennie GAI", 25, 47146], ["ONG Xin Yee / Carmen TING", 26, 46153], ["LIN Chih-Chun / YANG Chu Yun", 27, 45050], ["Bengisu ERCETIN / Nazlıcan INCI", 28, 43732], ["KIM Hye Jeong / KONG Hee Yong", 29, 43167], ["Polina BUHROVA / Yevheniia KANTEMYR", 30, 43004]]},
+  DM:{nom:"Double mixte", list:[["FENG Yan Zhe / HUANG Dong Ping", 1, 109950], ["JIANG Zhen Bang / WEI Ya Xin", 2, 98400], ["Thom GICQUEL / Delphine DELRUE", 3, 86490], ["Mathias CHRISTIANSEN / Alexandra BØJE", 4, 84470], ["GUO Xin Wa / CHEN Fang Hui", 5, 79670], ["Dechapol PUAVARANUKROH / Supissara PAEWSAMPRAN", 6, 76690], ["CHENG Xing / ZHANG Chi", 7, 66800], ["YE Hong Wei / Nicole Gonzales CHAN", 8, 66630], ["Amri SYAHNAWI / Nita Violina MARWAH", 9, 63020], ["Yuta WATANABE / Maya TAGUCHI", 10, 60700], ["YANG Po-Hsuan / HU Ling Fang", 11, 59310], ["GOH Soon Huat / LAI Shevon Jemie", 12, 58750], ["Akira KOGA / Natsu SAITO", 13, 58410], ["HOO Pang Ron / LAI Pei Jing", 14, 57420], ["TANG Chun Man / TSE Ying Suet", 15, 55070], ["ZHU Yi Jun / LI Qian", 16, 54620], ["GAO Jia Xuan / WU Meng Ying", 17, 53060], ["Pakkapon TEERARATSAKUL / Sapsiree TAERATTANACHAI", 18, 52880], ["Yuichi SHIMOGAMI / Sayaka HOBARA", 19, 52840], ["Presley SMITH / Jennie GAI", 20, 51480], ["LIU Kuang Heng / HSU Yin-Hui", 21, 50380], ["KIM Jae Hyeon / JANG Ha Jeong", 22, 49490], ["CHEN Tang Jie / TOH Ee Wei", 23, 49150], ["DHRUV KAPILA / Tanisha CRASTO", 24, 47840], ["CHAN Yin Chak / NG Tsz Yau", 25, 46890], ["Marvin SEIDEL / Thuc Phuong NGUYEN", 26, 42910], ["Jafar HIDAYATULLAH / Felisha Alberta Nathaniel PASARIBU", 27, 42390], ["WU Guan Xun / LEE Chia Hsin", 28, 41250], ["Ruttanapak OUPTHONG / Jhenicha SUDJAIPRAPARAT", 29, 41160], ["Callum HEMMING / Estelle VAN LEEUWEN", 30, 40590]]}
+};
+const RANK_WEEK = "semaine 47 (17/11/2026)";
+const TOURNOI = {nom:"Open de Hong Kong 2026", lieu:"Kai Tak Arena · Super 500 · 17-22 nov.", level:"0.95", matchs:[{"disc": "SH", "round": "1er tour", "A": "Panitchaphon Teeraratsakul (THA)", "B": "Jason Gunawan (HKG)", "ptsA": 57295, "ptsB": 55650, "home": "B", "note": "", "pA": 0.4593}, {"disc": "SH", "round": "1er tour", "A": "Ng Ka Long Angus (HKG)", "B": "Jia Heng Teh (SGP)", "ptsA": 47999, "ptsB": 42808, "home": "A", "note": "", "pA": 0.6072}, {"disc": "SH", "round": "1er tour", "A": "Zaki Ubaidillah (INA)", "B": "Chou Tien-chen (TPE) [5]", "ptsA": 51331, "ptsB": 82230, "home": "0", "note": "", "pA": 0.2914}, {"disc": "SH", "round": "1er tour", "A": "Magnus Johannesen (DEN)", "B": "Yoo Tae-bin (KOR)", "ptsA": 29492, "ptsB": 40379, "home": "0", "note": "", "pA": 0.3555}, {"disc": "SH", "round": "1er tour", "A": "Kidambi Srikanth (IND)", "B": "Koki Watanabe (JPN)", "ptsA": 46485, "ptsB": 62700, "home": "0", "note": "", "pA": 0.362}, {"disc": "SH", "round": "1er tour", "A": "Hu Zhe An (CHN)", "B": "Lee Cheuk Yiu (HKG)", "ptsA": 49156, "ptsB": 56863, "home": "B", "note": "", "pA": 0.3789}, {"disc": "SH", "round": "1er tour", "A": "Shogo Ogawa (JPN)", "B": "Kunlavut Vitidsarn (THA) [2]", "ptsA": 25690, "ptsB": 89835, "home": "0", "note": "", "pA": 0.0968}, {"disc": "SH", "round": "2e tour", "A": "Lin Chun-yi (TPE)", "B": "Zhu Xuan Chen (CHN)", "ptsA": 62884, "ptsB": 40040, "home": "0", "note": "", "pA": 0.701}, {"disc": "SH", "round": "2e tour", "A": "Loh Kean Yew (SGP) [8]", "B": "Kenta Nishimoto (JPN)", "ptsA": 68300, "ptsB": 40629, "home": "0", "note": "", "pA": 0.7267}, {"disc": "SH", "round": "2e tour", "A": "Lakshya Sen (IND)", "B": "Rasmus Gemke (DEN)", "ptsA": 68503, "ptsB": 47924, "home": "0", "note": "", "pA": 0.6628}, {"disc": "SH", "round": "2e tour", "A": "Dong Tian Yao (CHN)", "B": "Toma Junior Popov (FRA)", "ptsA": 37030, "ptsB": 66047, "home": "0", "note": "", "pA": 0.2522}, {"disc": "SD", "round": "1er tour", "A": "Ishika Jaiswal (USA)", "B": "Wong Ling Ching (HKG)", "ptsA": 32570, "ptsB": 34371, "home": "B", "note": "", "pA": 0.4205}, {"disc": "SD", "round": "1er tour", "A": "Peng Yu-wei (TPE)", "B": "Ratchanok Intanon (THA) [3]", "ptsA": 24240, "ptsB": 73386, "home": "0", "note": "", "pA": 0.1185}, {"disc": "SD", "round": "1er tour", "A": "Rakshitha Ramraj (IND)", "B": "Mia Blichfeldt (DEN)", "ptsA": 35687, "ptsB": 49653, "home": "0", "note": "", "pA": 0.3486}, {"disc": "SD", "round": "1er tour", "A": "Amalie Schulz (DEN)", "B": "Chen Yufei (CHN) [2]", "ptsA": 36847, "ptsB": 87351, "home": "0", "note": "", "pA": 0.1685}, {"disc": "SD", "round": "2e tour", "A": "Wang Zhiyi (CHN) [1]", "B": "Natsuki Nidaira (JPN)", "ptsA": 101489, "ptsB": 39040, "home": "0", "note": "", "pA": 0.8525}, {"disc": "SD", "round": "2e tour", "A": "Putri Kusuma Wardani (INA) [6]", "B": "Tonrug Saeheng (THA)", "ptsA": 69903, "ptsB": 26400, "home": "0", "note": "", "pA": 0.8564}, {"disc": "SD", "round": "2e tour", "A": "Tomoka Miyazaki (JPN) [4]", "B": "Chiu Pin-chian (TPE)", "ptsA": 71826, "ptsB": 47258, "home": "0", "note": "", "pA": 0.688}, {"disc": "SD", "round": "2e tour", "A": "Hina Akechi (JPN)", "B": "Ashmita Chaliha (IND)", "ptsA": 54680, "ptsB": 42240, "home": "0", "note": "", "pA": 0.62}, {"disc": "SD", "round": "2e tour", "A": "Michelle Li (CAN)", "B": "Han Yue (CHN) [8]", "ptsA": 53277, "ptsB": 64698, "home": "0", "note": "", "pA": 0.4089}, {"disc": "SD", "round": "2e tour", "A": "Lin Hsiang-ti (TPE)", "B": "Pornpawee Chochuwong (THA) [5]", "ptsA": 53009, "ptsB": 70277, "home": "0", "note": "", "pA": 0.3695}, {"disc": "DH", "round": "1er tour", "A": "He Zhi-wei / Huang Jui-hsuan (TPE)", "B": "Amsakarunan / Arjun M.R. (IND)", "ptsA": 36550, "ptsB": 42264, "home": "0", "note": "", "pA": 0.4315}, {"disc": "DH", "round": "1er tour", "A": "Chiu Hsiang-chieh / Wang Chi-lin (TPE)", "B": "Aaron Tai / Yap Roy King (MAS)", "ptsA": 50355, "ptsB": 37191, "home": "0", "note": "", "pA": 0.6397}, {"disc": "DH", "round": "2e tour", "A": "Alfian / Fikri (INA) [1]", "B": "Lundgaard / Vestergaard (DEN)", "ptsA": 95153, "ptsB": 63075, "home": "0", "note": "", "pA": 0.685}, {"disc": "DH", "round": "2e tour", "A": "Satwik / Chirag (IND) [5]", "B": "Azriyn / Tan Wee Kiong (MAS)", "ptsA": 74831, "ptsB": 42400, "home": "0", "note": "", "pA": 0.7441}, {"disc": "DH", "round": "2e tour", "A": "Hu Keyuan / Lin Xiangyi (CHN)", "B": "Kumagai / Nishi (JPN)", "ptsA": 52153, "ptsB": 52788, "home": "0", "note": "", "pA": 0.4943}, {"disc": "DH", "round": "2e tour", "A": "He Jiting / Ren Xiangyu (CHN)", "B": "Chen Boyang / Liu Yi (CHN)", "ptsA": 48382, "ptsB": 62715, "home": "0", "note": "", "pA": 0.3794}, {"disc": "DH", "round": "2e tour", "A": "Kang Min-hyuk / Lee Jong-min (KOR)", "B": "Ben Lane / Sean Vendy (ENG) [7]", "ptsA": 40000, "ptsB": 68241, "home": "0", "note": "Paire coréenne récente (Kang jouait avec Ki Dong-ju, ~63 000 pts) : points estimés", "pA": 0.2679}, {"disc": "DH", "round": "2e tour", "A": "Chia Weijie / Teo Ee Yi (MAS)", "B": "Liang Weikeng / Wang Chang (CHN) [2]", "ptsA": 38300, "ptsB": 95089, "home": "0", "note": "", "pA": 0.1576}, {"disc": "DD", "round": "1er tour", "A": "Hiramoto / Shida (JPN)", "B": "Mijad / Tungkasatan (THA)", "ptsA": 34000, "ptsB": 39433, "home": "0", "note": "Paire japonaise remaniée : points estimés", "pA": 0.4301}, {"disc": "DD", "round": "1er tour", "A": "Low Zi Yu / Maisarah (MAS)", "B": "Jongsathapornparn / Wedler (THA)", "ptsA": 31209, "ptsB": 26810, "home": "0", "note": "", "pA": 0.5716}, {"disc": "DD", "round": "1er tour", "A": "Treesa Jolly / Gayatri Gopichand (IND)", "B": "Fan Ka Yan / Leung Y.Y. (HKG)", "ptsA": 53022, "ptsB": 18000, "home": "B", "note": "Paire de Hong Kong issue des qualifs : points estimés", "pA": 0.8546}, {"disc": "DD", "round": "2e tour", "A": "Fukushima / Matsumoto (JPN) [1]", "B": "Hirota / Sakuramoto (JPN)", "ptsA": 95906, "ptsB": 56120, "home": "0", "note": "", "pA": 0.7327}, {"disc": "DD", "round": "2e tour", "A": "Iwanaga / Nakanishi (JPN) [3]", "B": "Chang Ching-hui / Yang Ching-tun (TPE)", "ptsA": 75814, "ptsB": 36965, "home": "0", "note": "", "pA": 0.7925}, {"disc": "DD", "round": "2e tour", "A": "Stoeva / Stoeva (BUL) [6]", "B": "Nakade / Takahashi (JPN)", "ptsA": 62556, "ptsB": 60570, "home": "0", "note": "", "pA": 0.5153}, {"disc": "DD", "round": "2e tour", "A": "Corbett / Gai (USA)", "B": "Hirokami / Hobara (JPN) [8]", "ptsA": 47146, "ptsB": 57960, "home": "0", "note": "", "pA": 0.4033}, {"disc": "DD", "round": "2e tour", "A": "Yeung N.T. / Yeung P.L. (HKG)", "B": "Pearly Tan / Thinaah (MAS) [2]", "ptsA": 52794, "ptsB": 84650, "home": "A", "note": "", "pA": 0.3373}, {"disc": "DM", "round": "1er tour", "A": "Hemming / van Leeuwen (ENG)", "B": "Chan Yin Chak / Ng Tsz Yau (HKG)", "ptsA": 40590, "ptsB": 46890, "home": "B", "note": "", "pA": 0.3795}, {"disc": "DM", "round": "1er tour", "A": "Ferdinansyah / Pasaribu (INA)", "B": "Dechapol / Supissara (THA) [3]", "ptsA": 35000, "ptsB": 76690, "home": "0", "note": "Paire indonésienne récente : points estimés", "pA": 0.1888}, {"disc": "DM", "round": "2e tour", "A": "Feng Yanzhe / Huang Dongping (CHN) [1]", "B": "Wong Tien Ci / Lim Chiew Sien (MAS)", "ptsA": 109950, "ptsB": 31590, "home": "0", "note": "", "pA": 0.9026}, {"disc": "DM", "round": "2e tour", "A": "Syahnawi / Marwah (INA) [7]", "B": "Wu Hsuan-yi / Yang Chu-yun (TPE)", "ptsA": 63020, "ptsB": 37180, "home": "0", "note": "", "pA": 0.7297}, {"disc": "DM", "round": "2e tour", "A": "Guo Xinwa / Chen Fanghui (CHN) [4]", "B": "Yuta Watanabe / Maya Taguchi (JPN)", "ptsA": 79670, "ptsB": 60700, "home": "0", "note": "", "pA": 0.6261}, {"disc": "DM", "round": "2e tour", "A": "Goh Soon Huat / Lai Shevon (MAS)", "B": "Presley Smith / Jennie Gai (USA)", "ptsA": 58750, "ptsB": 51480, "home": "0", "note": "", "pA": 0.5624}, {"disc": "DM", "round": "2e tour", "A": "Jomkoh / Sudjaipraparat (THA)", "B": "Ruben García / Lucía Rodríguez (ESP)", "ptsA": 32000, "ptsB": 34600, "home": "0", "note": "Paire thaïe remaniée : points estimés", "pA": 0.463}, {"disc": "DM", "round": "2e tour", "A": "Pakkapon / Sapsiree (THA)", "B": "Gao Jiaxuan / Wu Mengying (CHN)", "ptsA": 52880, "ptsB": 53060, "home": "0", "note": "", "pA": 0.4984}, {"disc": "DM", "round": "2e tour", "A": "Hoo Pang Ron / Lai Pei Jing (MAS)", "B": "Jiang Zhenbang / Wei Yaxin (CHN) [2]", "ptsA": 57420, "ptsB": 98400, "home": "0", "note": "", "pA": 0.2663}]};
+
+/* ---------- Stockage ---------- */
+const LS = {
+  get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+};
+function players(d){ return LS.get("pb2_pl_"+d, null) || DISCS[d].list.map(([n,r,p])=>({n,r,p})); }
+function savePlayers(d,arr){ LS.set("pb2_pl_"+d,arr); }
+
+/* ---------- État ---------- */
+const blank = () => ({name:"",rank:"",pts:"",form:["","","","",""],fat:0,inj:false});
+let S = {disc:"SH", A:blank(), B:blank(), home:"0"};
+let discPl = "SH";
+
+const $ = id => document.getElementById(id);
+
+/* ---------- Construction des cartes joueurs ---------- */
+function playerCard(side){
+  const p = S[side], lab = side==="A"?"Joueur A":"Joueur B";
+  const opts = players(S.disc).slice().sort((a,b)=>a.r-b.r)
+    .map(x=>`<option value="${esc(x.n)}">${esc(x.n)} — n°${x.r}</option>`).join("");
+  return `
+    <h3>${lab}</h3>
+    <label>Choisir dans la liste</label>
+    <select data-pick="${side}"><option value="">— choisir —</option>${opts}<option value="__autre">Autre (saisie libre)…</option></select>
+    <label>Nom</label><input data-f="${side}.name" value="${esc(p.name)}" placeholder="Nom">
+    <div class="row">
+      <div><label>Classement mondial</label><input data-f="${side}.rank" type="number" min="1" value="${p.rank}" placeholder="ex : 12" inputmode="numeric"></div>
+      <div><label>Points BWF (mieux)</label><input data-f="${side}.pts" type="number" min="0" value="${p.pts}" placeholder="ex : 62700" inputmode="numeric"></div>
+    </div>
+    <label>Forme : 5 derniers matchs (du plus récent →)</label>
+    <div class="form" data-form="${side}">
+      ${p.form.map((v,i)=>`<button data-i="${i}" class="${v}">${v||"?"}</button>`).join("")}
+    </div>
+    <div class="hint">Touche une case : V = victoire, D = défaite, ? = inconnu</div>
+    <div class="row">
+      <div><label>Fatigue</label>
+        <select data-f="${side}.fat">
+          <option value="0" ${p.fat==0?"selected":""}>Frais / normal</option>
+          <option value="-25" ${p.fat==-25?"selected":""}>Long match la veille</option>
+          <option value="-50" ${p.fat==-50?"selected":""}>Très long (3 sets) ou 2 tableaux</option>
+        </select></div>
+      <div><label>Retour de blessure</label>
+        <select data-f="${side}.inj">
+          <option value="false" ${!p.inj?"selected":""}>Non</option>
+          <option value="true" ${p.inj?"selected":""}>Oui</option>
+        </select></div>
+    </div>`;
+}
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+function renderDiscChips(el, cur, onPick){
+  el.innerHTML = Object.entries(DISCS).map(([k,v])=>`<button class="chip ${k===cur?"on":""}" data-d="${k}">${v.nom}</button>`).join("");
+  el.querySelectorAll("button").forEach(b=>b.onclick=()=>onPick(b.dataset.d));
+}
+
+function renderAll(){
+  renderDiscChips($("disc"), S.disc, d=>{S.disc=d;S.A=blank();S.B=blank();renderAll();});
+  $("cardA").innerHTML = playerCard("A");
+  $("cardB").innerHTML = playerCard("B");
+  bindCards();
+  renderHome();
+  compute();
+}
+function renderHome(){
+  const nA=S.A.name||"A", nB=S.B.name||"B";
+  const o=[["A",short(nA)],["0","Personne"],["B",short(nB)]];
+  $("home").innerHTML=o.map(([k,t])=>`<button class="chip ${S.home===k?"on":""}" data-h="${k}">${esc(t)}</button>`).join("");
+  $("home").querySelectorAll("button").forEach(b=>b.onclick=()=>{S.home=b.dataset.h;renderHome();compute();});
+  $("h2hLA").textContent="Victoires "+short(nA); $("h2hLB").textContent="Victoires "+short(nB);
+  $("oddLA").textContent="Cote "+short(nA); $("oddLB").textContent="Cote "+short(nB);
+}
+function short(n){ n=n.replace(/\s*\(.*\)\s*$/,""); return n.length>22?n.slice(0,21)+"…":n; }
+
+function bindCards(){
+  document.querySelectorAll("[data-pick]").forEach(sel=>{
+    sel.onchange=()=>{
+      const side=sel.dataset.pick, v=sel.value;
+      if(v==="__autre"){S[side].name="";S[side].rank="";}
+      else if(v){const p=players(S.disc).find(x=>x.n===v); S[side].name=p.n; S[side].rank=p.r; S[side].pts=p.p||"";}
+      $("card"+side).innerHTML=playerCard(side); bindCards(); renderHome(); compute();
+    };
+  });
+  document.querySelectorAll("[data-f]").forEach(inp=>{
+    const ev = inp.tagName==="SELECT"?"change":"input";
+    inp.addEventListener(ev,()=>{
+      const [side,key]=inp.dataset.f.split(".");
+      let v=inp.value;
+      if(key==="fat") v=+v; if(key==="inj") v=(v==="true"); if(key==="rank"||key==="pts") v=v===""?"":+v;
+      S[side][key]=v;
+      if(key==="name") renderHome();
+      compute();
+    });
+  });
+  document.querySelectorAll("[data-form]").forEach(box=>{
+    box.querySelectorAll("button").forEach(b=>b.onclick=()=>{
+      const side=box.dataset.form,i=+b.dataset.i,cur=S[side].form[i];
+      const nx = cur===""?"V":cur==="V"?"D":"";
+      S[side].form[i]=nx; b.className=nx; b.textContent=nx||"?"; compute();
+    });
+  });
+}
+
+/* ---------- Modèle de calcul ---------- */
+// Force d'un joueur : 800·log10(points BWF). Sans points, on estime les points depuis le rang.
+function strength(p){
+  let pts = +p.pts;
+  if(!(pts>0)) pts = p.rank ? 105000*Math.pow(Math.max(1,+p.rank),-0.3) : 25000;
+  return 800*Math.log10(Math.max(1000,pts));
+}
+function formScore(f){
+  const w=[1.0,0.85,0.7,0.55,0.4]; let s=0,tw=0;
+  f.forEach((v,i)=>{ if(v){ s+= (v==="V"?1:-1)*w[i]; tw+=w[i]; } });
+  if(!tw) return 0;
+  return 55*(s/tw)*Math.min(1,tw/2.5);   // ±55 pts max, moins si peu de matchs connus
+}
+function h2hScore(a,b){ a=+a||0;b=+b||0; return 170*((a+1)/(a+b+2)-0.5); } // ±~60 pts
+function gameProbFromMatch(pm){ // inverse de p_m = g²(3−2g)
+  let lo=0,hi=1; for(let k=0;k<50;k++){const g=(lo+hi)/2; (g*g*(3-2*g)<pm)?lo=g:hi=g;} return (lo+hi)/2;
+}
+function lastResult(){ return window.__last; }
+
+function compute(){
+  const A=S.A,B=S.B;
+  const fac=[];
+  fac.push(["Points / classement BWF", strength(A)-strength(B)]);
+  fac.push(["Forme récente", formScore(A.form)-formScore(B.form)]);
+  fac.push(["Confrontations directes", h2hScore($("h2hA").value,$("h2hB").value)]);
+  fac.push(["Domicile", S.home==="A"?40:S.home==="B"?-40:0]);
+  fac.push(["Fatigue", (A.fat||0)-(B.fat||0)]);
+  fac.push(["Retour de blessure", (A.inj?-60:0)-(B.inj?-60:0)]);
+  const feel=+$("feel").value; fac.push(["Ton feeling", feel]);
+  $("feelTxt").textContent = feel===0?"Neutre":(feel>0?"+"+feel+" pour "+short(A.name||"A"):"+"+(-feel)+" pour "+short(B.name||"B"));
+
+  const diff = fac.reduce((s,f)=>s+f[1],0);
+  const lvl = +$("level").value;
+  let pA = 1/(1+Math.pow(10,-diff/400));
+  pA = 0.5 + (pA-0.5)*lvl;               // petits tournois = plus de surprises
+  pA = Math.min(0.97,Math.max(0.03,pA));
+  const pB = 1-pA;
+  const g = gameProbFromMatch(pA);
+  const s20=g*g, s21=2*g*g*(1-g), s12=2*g*(1-g)*(1-g), s02=(1-g)*(1-g);
+
+  const nA=short(A.name||"Joueur A"), nB=short(B.name||"Joueur B");
+  const ready = (A.rank!==""||A.pts!=="") && (B.rank!==""||B.pts!=="");
+  const oA=parseFloat($("oddA").value), oB=parseFloat($("oddB").value);
+  const val = (p,o)=> o>1 ? (p*o-1)*100 : null;
+  const vA=val(pA,oA), vB=val(pB,oB);
+  const vTxt=v=> v===null?"—":`<span class="${v>0?"pos":"neg"}">${v>0?"+":""}${v.toFixed(1)} %</span>`;
+  const conf = Math.abs(pA-0.5)>0.25?["Favori net","ok"]:Math.abs(pA-0.5)>0.1?["Avantage","mid"]:["Match serré","ko"];
+  let valueMsg="";
+  if(vA!==null && vA>3) valueMsg+=`<div class="badge ok" style="margin-top:8px">💡 Pari value sur ${esc(nA)} (+${vA.toFixed(1)} %)</div> `;
+  if(vB!==null && vB>3) valueMsg+=`<div class="badge ok" style="margin-top:8px">💡 Pari value sur ${esc(nB)} (+${vB.toFixed(1)} %)</div>`;
+
+  $("result").innerHTML = `
+    <h2>Pronostic ${ready?"":"<span class='badge mid'>renseigne les 2 classements</span>"}</h2>
+    <div class="names"><div style="color:var(--a)">${esc(nA)}</div><div style="color:var(--b)">${esc(nB)}</div></div>
+    <div class="big"><b class="a">${(pA*100).toFixed(0)} %</b><span class="badge ${conf[1]}">${conf[0]}</span><b class="b">${(pB*100).toFixed(0)} %</b></div>
+    <div class="bar"><i class="ia" style="width:${pA*100}%"></i><i class="ib" style="width:${pB*100}%"></i></div>
+    ${valueMsg}
+    <table style="margin-top:12px">
+      <tr><th>Score (sets)</th><th class="n">Chance</th><th class="n">Cote juste</th></tr>
+      <tr><td>${esc(nA)} 2-0</td><td class="n">${pc(s20)}</td><td class="n">${fo(s20)}</td></tr>
+      <tr><td>${esc(nA)} 2-1</td><td class="n">${pc(s21)}</td><td class="n">${fo(s21)}</td></tr>
+      <tr><td>${esc(nB)} 2-1</td><td class="n">${pc(s12)}</td><td class="n">${fo(s12)}</td></tr>
+      <tr><td>${esc(nB)} 2-0</td><td class="n">${pc(s02)}</td><td class="n">${fo(s02)}</td></tr>
+      <tr><td>Match en 3 sets</td><td class="n">${pc(s21+s12)}</td><td class="n">${fo(s21+s12)}</td></tr>
+    </table>
+    <table style="margin-top:10px">
+      <tr><th>Vainqueur</th><th class="n">Cote juste</th><th class="n">Cote book.</th><th class="n">Value</th></tr>
+      <tr><td>${esc(nA)}</td><td class="n">${fo(pA)}</td><td class="n">${oA>1?oA.toFixed(2):"—"}</td><td class="n">${vTxt(vA)}</td></tr>
+      <tr><td>${esc(nB)}</td><td class="n">${fo(pB)}</td><td class="n">${oB>1?oB.toFixed(2):"—"}</td><td class="n">${vTxt(vB)}</td></tr>
+    </table>
+    <h2 style="margin-top:14px">Ce qui fait pencher (points pour ${esc(nA)})</h2>
+    ${fac.map(([n,v])=>`<div class="fac"><span>${n}</span><span class="${v>0.5?"pos":v<-0.5?"neg":""}">${v>0?"+":""}${Math.round(v)}</span></div>`).join("")}
+  `;
+  window.__last = {date:new Date().toISOString(), disc:S.disc, round:$("round").value,
+    level:$("level").selectedOptions[0].text, A:A.name||"Joueur A", B:B.name||"Joueur B",
+    pA, oA:oA>1?oA:null, oB:oB>1?oB:null, ready};
+}
+const pc=x=>(x*100).toFixed(0)+" %";
+const fo=x=>x>0.005?(1/x).toFixed(2):"—";
+
+/* ---------- Événements généraux ---------- */
+["h2hA","h2hB","oddA","oddB","feel","level","round"].forEach(id=>{
+  $(id).addEventListener(id==="level"||id==="round"?"change":"input",compute);
+});
+$("save").onclick=()=>{
+  const r=lastResult();
+  if(!r||!r.ready){alert("Renseigne d'abord les classements des deux joueurs.");return;}
+  const h=LS.get("pb_hist",[]); h.unshift({...r,id:Date.now(),win:null}); LS.set("pb_hist",h);
+  toast("Prono enregistré ✔");
+};
+$("reset").onclick=()=>{
+  S.A=blank();S.B=blank();S.home="0";
+  ["h2hA","h2hB"].forEach(i=>$(i).value=0); ["oddA","oddB"].forEach(i=>$(i).value=""); $("feel").value=0;
+  renderAll(); window.scrollTo({top:0,behavior:"smooth"});
+};
+
+/* ---------- Historique ---------- */
+function renderHist(){
+  const h=LS.get("pb_hist",[]);
+  const done=h.filter(x=>x.win);
+  const good=done.filter(x=>(x.win==="A")===(x.pA>=0.5)).length;
+  const brier = done.length? done.reduce((s,x)=>s+Math.pow((x.win==="A"?1:0)-x.pA,2),0)/done.length : null;
+  let mise=0,gain=0;
+  done.forEach(x=>{ // simulation : 1 € sur le favori de l'appli si une cote a été saisie
+    const fav = x.pA>=0.5?"A":"B", o = fav==="A"?x.oA:x.oB;
+    if(o){ mise+=1; if(x.win===fav) gain+=o; }
+  });
+  $("stats").innerHTML=`
+    <div><b>${done.length?Math.round(100*good/done.length)+" %":"—"}</b><span>bons pronos<br>(${good}/${done.length})</span></div>
+    <div><b>${h.length-done.length}</b><span>en attente<br>de résultat</span></div>
+    <div><b>${mise?((gain-mise)/mise*100).toFixed(0)+" %":"—"}</b><span>ROI si 1 € sur<br>le favori</span></div>`;
+  $("histList").innerHTML = h.length? h.map(x=>{
+    const fav=x.pA>=0.5?x.A:x.B, pf=Math.max(x.pA,1-x.pA);
+    const st = !x.win?`<span class="badge mid">En attente</span>`:
+      ((x.win==="A")===(x.pA>=0.5)?`<span class="badge ok">✔ Bon prono</span>`:`<span class="badge ko">✘ Raté</span>`);
+    return `<div class="hist">
+      <div class="t">${new Date(x.date).toLocaleDateString("fr-FR")} · ${DISCS[x.disc].nom} · ${esc(x.round)} · ${esc(x.level)}</div>
+      <div class="m">${esc(short(x.A))} <span style="color:var(--a)">${Math.round(x.pA*100)}%</span> – <span style="color:var(--b)">${Math.round((1-x.pA)*100)}%</span> ${esc(short(x.B))}</div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${st}
+        <span class="hint" style="margin:0">Qui a gagné ?</span>
+        <button class="chip ${x.win==="A"?"on":""}" data-w="${x.id}" data-v="A">${esc(short(x.A))}</button>
+        <button class="chip ${x.win==="B"?"on":""}" data-w="${x.id}" data-v="B">${esc(short(x.B))}</button>
+        <button class="x" data-del="${x.id}" title="Supprimer">🗑</button>
+      </div></div>`;
+  }).join("") : `<div class="hint">Aucun prono enregistré pour l'instant. Fais un prono puis touche « Enregistrer ».</div>`;
+  $("histList").querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>{
+    const h=LS.get("pb_hist",[]); const it=h.find(x=>x.id==b.dataset.w);
+    it.win = it.win===b.dataset.v?null:b.dataset.v; LS.set("pb_hist",h); renderHist();
+  });
+  $("histList").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{
+    if(!confirm("Supprimer ce prono ?"))return;
+    LS.set("pb_hist",LS.get("pb_hist",[]).filter(x=>x.id!=b.dataset.del)); renderHist();
+  });
+}
+
+/* ---------- Joueurs ---------- */
+function renderPlayers(){
+  renderDiscChips($("disc2"), discPl, d=>{discPl=d;renderPlayers();});
+  const arr=players(discPl).slice().sort((a,b)=>a.r-b.r);
+  $("plList").innerHTML=`<div class="plrow" style="font-size:12px;color:var(--mute)"><span>Joueur</span><span>Rang</span><span>Points</span><span></span></div>`+arr.map((p,i)=>`<div class="plrow">
+      <span style="font-size:13.5px">${esc(p.n)}</span>
+      <input type="number" value="${p.r}" data-r="${esc(p.n)}" inputmode="numeric">
+      <input type="number" value="${p.p||""}" data-p="${esc(p.n)}" inputmode="numeric">
+      <button class="x" data-rm="${esc(p.n)}">✕</button></div>`).join("");
+  $("plList").querySelectorAll("[data-r]").forEach(inp=>inp.onchange=()=>{
+    const a=players(discPl); const p=a.find(x=>x.n===inp.dataset.r); p.r=Math.max(1,+inp.value||1); savePlayers(discPl,a); renderPlayers(); if(discPl===S.disc) renderAll();
+  });
+  $("plList").querySelectorAll("[data-p]").forEach(inp=>inp.onchange=()=>{
+    const a=players(discPl); const p=a.find(x=>x.n===inp.dataset.p); p.p=+inp.value||""; savePlayers(discPl,a); if(discPl===S.disc) renderAll();
+  });
+  $("plList").querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{
+    savePlayers(discPl,players(discPl).filter(x=>x.n!==b.dataset.rm)); renderPlayers(); if(discPl===S.disc) renderAll();
+  });
+}
+$("addPl").onclick=()=>{
+  const n=$("newName").value.trim(), r=+$("newRank").value;
+  if(!n||!r){alert("Mets un nom et un rang.");return;}
+  const a=players(discPl).filter(x=>x.n!==n); a.push({n,r,p:""}); savePlayers(discPl,a);
+  $("newName").value="";$("newRank").value=""; renderPlayers(); if(discPl===S.disc) renderAll();
+};
+$("resetPl").onclick=()=>{
+  if(!confirm("Remettre la liste d'origine pour ce tableau ?"))return;
+  localStorage.removeItem("pb2_pl_"+discPl); renderPlayers(); if(discPl===S.disc) renderAll();
+};
+
+/* ---------- Tournoi ---------- */
+let tourDisc="SH";
+function probMatch(m){
+  const d = strength({pts:m.ptsA}) - strength({pts:m.ptsB}) + (m.home==="A"?40:m.home==="B"?-40:0);
+  const p = 1/(1+Math.pow(10,-d/400)); return 0.5+(p-0.5)*(+TOURNOI.level);
+}
+function renderTour(){
+  $("tourNom").textContent="🏆 "+TOURNOI.nom; $("tourLieu").textContent=TOURNOI.lieu+" · points BWF "+RANK_WEEK;
+  const counts={}; TOURNOI.matchs.forEach(m=>counts[m.disc]=(counts[m.disc]||0)+1);
+  $("tourDisc").innerHTML=Object.entries(DISCS).filter(([k])=>counts[k]).map(([k,v])=>`<button class="chip ${k===tourDisc?"on":""}" data-d="${k}">${v.nom} (${counts[k]})</button>`).join("");
+  $("tourDisc").querySelectorAll("button").forEach(b=>b.onclick=()=>{tourDisc=b.dataset.d;renderTour();});
+  const list=TOURNOI.matchs.map((m,i)=>({...m,i})).filter(m=>m.disc===tourDisc);
+  const rounds=[...new Set(list.map(m=>m.round))];
+  $("tourList").innerHTML=rounds.map(r=>`<div class="card"><h2>${esc(r)}</h2>`+list.filter(m=>m.round===r).map(m=>{
+    const p=probMatch(m), fA=p>=0.5, pf=Math.max(p,1-p);
+    const conf = pf>0.75?["Favori net","ok"]:pf>0.6?["Avantage","mid"]:["Serré","ko"];
+    return `<div class="hist" data-open="${m.i}" style="cursor:pointer">
+      <div class="names" style="display:flex;justify-content:space-between;gap:8px;font-size:14px">
+        <div style="color:var(--a);${fA?"font-weight:800":"opacity:.8"}">${esc(m.A)}${m.home==="A"?" 🏠":""}</div>
+        <div style="color:var(--b);text-align:right;${!fA?"font-weight:800":"opacity:.8"}">${m.home==="B"?"🏠 ":""}${esc(m.B)}</div></div>
+      <div class="big" style="margin:4px 0"><b class="a" style="font-size:24px">${Math.round(p*100)} %</b><span class="badge ${conf[1]}">${conf[0]} · cote juste ${(1/pf).toFixed(2)}</span><b class="b" style="font-size:24px">${Math.round((1-p)*100)} %</b></div>
+      <div class="bar" style="height:8px"><i class="ia" style="width:${p*100}%"></i><i class="ib" style="width:${(1-p)*100}%"></i></div>
+      ${m.note?`<div class="hint">ℹ️ ${esc(m.note)}</div>`:""}
+    </div>`;}).join("")+`</div>`).join("");
+  $("tourList").querySelectorAll("[data-open]").forEach(el=>el.onclick=()=>openMatch(TOURNOI.matchs[+el.dataset.open]));
+}
+function openMatch(m){
+  S.disc=m.disc; S.A={...blank(),name:m.A,pts:m.ptsA}; S.B={...blank(),name:m.B,pts:m.ptsB}; S.home=m.home||"0";
+  ["h2hA","h2hB"].forEach(i=>$(i).value=0); ["oddA","oddB"].forEach(i=>$(i).value=""); $("feel").value=0;
+  $("level").value=TOURNOI.level;
+  const r=[...$("round").options].find(o=>o.text===m.round); if(r) $("round").value=r.value;
+  renderAll(); showTab("prono");
+}
+
+/* ---------- Navigation ---------- */
+function showTab(t){
+  document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x.dataset.tab===t));
+  ["tour","prono","hist","players"].forEach(k=>$("tab-"+k).classList.toggle("hide",k!==t));
+  if(t==="tour") renderTour();
+  if(t==="hist") renderHist();
+  if(t==="players") renderPlayers();
+  window.scrollTo(0,0);
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+function toast(t){
+  const d=document.createElement("div"); d.textContent=t;
+  d.style.cssText="position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:#1d4f91;color:#fff;padding:10px 16px;border-radius:999px;font-weight:700;z-index:99";
+  document.body.appendChild(d); setTimeout(()=>d.remove(),1600);
+}
+
+renderAll();
+renderTour();
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
