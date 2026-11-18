@@ -1,13 +1,14 @@
-const CACHE = "verybadtour-v1";
-const FILES = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
+const CACHE = "verybadtour-v2";
+const FILES = ["./", "index.html", "auto.js?v=1", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))));
   self.clients.claim();
 });
-// Réseau d'abord (pour avoir les nouveaux pronos), cache si hors-ligne
+// Uniquement les fichiers de l'appli : réseau d'abord, cache si hors-ligne.
+// Les données (BWF, Wikipédia) sont gérées par l'appli elle-même.
 self.addEventListener("fetch", e => {
-  if (e.request.method !== "GET") return;
+  if (e.request.method !== "GET" || new URL(e.request.url).origin !== location.origin) return;
   e.respondWith(fetch(e.request).then(r => { const c = r.clone(); caches.open(CACHE).then(x => x.put(e.request, c)); return r; })
     .catch(() => caches.match(e.request)));
 });

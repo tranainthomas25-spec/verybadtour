@@ -145,8 +145,13 @@ input[type=range]{padding:0;height:30px;background:none;border:0;accent-color:va
   <div class="card">
     <h2 id="tourNom"></h2>
     <div class="hint" id="tourLieu" style="margin-top:-6px;margin-bottom:8px"></div>
+    <div class="chips" id="tourEvents" style="margin-bottom:8px"></div>
     <div class="chips" id="tourDisc"></div>
-    <div class="hint" style="margin-top:8px">Touche un match pour l'ouvrir dans le calculateur et ajouter forme, confrontations, fatigue et cotes.</div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn sec small" id="refresh">🔄 Actualiser</button>
+      <button class="btn sec small" id="showDone"></button>
+    </div>
+    <div class="hint" style="margin-top:8px">Tout se met à jour tout seul : tournoi en cours, tableau, résultats, classement BWF, fatigue. Touche un match pour ajouter les cotes de ton bookmaker.</div>
   </div>
   <div id="tourList"></div>
 </section>
@@ -168,7 +173,7 @@ input[type=range]{padding:0;height:30px;background:none;border:0;accent-color:va
   <div class="card">
     <h2>Joueurs & classements</h2>
     <div class="chips" id="disc2" style="margin-bottom:8px"></div>
-    <div class="hint" style="margin-bottom:8px">Top 30 officiel BWF de la semaine 47 (17/11/2026). Tu peux modifier rang et points quand le classement change : c'est gardé sur ton téléphone (bwfbadminton.com → Rankings).</div>
+    <div class="hint" style="margin-bottom:8px">Top 80 du classement officiel BWF, mis à jour automatiquement. Tu peux corriger un rang ou des points à la main ; « Remettre la liste d'origine » revient au classement officiel.</div>
     <div id="plList"></div>
     <div class="plrow" style="border:0;margin-top:6px">
       <input id="newName" placeholder="Nouveau joueur / paire">
@@ -199,6 +204,7 @@ input[type=range]{padding:0;height:30px;background:none;border:0;accent-color:va
   <button data-tab="players"><span class="ic">👥</span>Joueurs</button>
 </nav>
 
+<script src="auto.js?v=1"></script>
 <script>
 /* ---------- Données de départ (classements indicatifs, modifiables) ---------- */
 const DISCS = {
@@ -216,7 +222,11 @@ const LS = {
   get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
   set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 };
-function players(d){ return LS.get("pb2_pl_"+d, null) || DISCS[d].list.map(([n,r,p])=>({n,r,p})); }
+function livePlayers(d){
+  const rk = (LIVE && LIVE.rank) || LS.get("vbt_rank", null); const rows = (rk && rk.data && rk.data[d]) || null;
+  return rows ? rows.slice(0,80).map(x=>({n:x.b?x.a+" / "+x.b:x.a, r:x.r, p:x.p})) : null;
+}
+function players(d){ return LS.get("pb2_pl_"+d, null) || livePlayers(d) || DISCS[d].list.map(([n,r,p])=>({n,r,p})); }
 function savePlayers(d,arr){ LS.set("pb2_pl_"+d,arr); }
 
 /* ---------- État ---------- */
@@ -478,36 +488,71 @@ $("resetPl").onclick=()=>{
   localStorage.removeItem("pb2_pl_"+discPl); renderPlayers(); if(discPl===S.disc) renderAll();
 };
 
-/* ---------- Tournoi ---------- */
-let tourDisc="SH";
-function probMatch(m){
-  const d = strength({pts:m.ptsA}) - strength({pts:m.ptsB}) + (m.home==="A"?40:m.home==="B"?-40:0);
-  const p = 1/(1+Math.pow(10,-d/400)); return 0.5+(p-0.5)*(+TOURNOI.level);
+/* ---------- Tournoi (automatique) ---------- */
+let tourDisc="SH", LIVE=null, liveErr=null, liveBusy=false, showDone=false, tourPage=null;
+const pad5 = f => [...(f||[]), "", "", "", "", ""].slice(0,5);
+function curT(){ // tournoi affiché : données en direct, sinon données intégrées
+  if(LIVE && LIVE.matches) return {nom:LIVE.ev.name+" "+new Date(LIVE.ev.start).getFullYear(),
+    lieu:[LIVE.ev.host, LIVE.ev.level, fmtDates(LIVE.ev)].filter(Boolean).join(" · "), coef:LIVE.coef, matchs:LIVE.matches, live:true};
+  return {nom:TOURNOI.nom, lieu:TOURNOI.lieu, coef:+TOURNOI.level, matchs:TOURNOI.matchs, live:false};
+}
+function fmtDates(e){ const o={day:"numeric",month:"short"}; return new Date(e.start).toLocaleDateString("fr-FR",o)+" → "+new Date(e.end).toLocaleDateString("fr-FR",o); }
+function probMatch(m, coef){
+  const d = strength({pts:m.ptsA}) - strength({pts:m.ptsB}) + (m.home==="A"?40:m.home==="B"?-40:0)
+          + (m.fatA||0) - (m.fatB||0) + formScore(pad5(m.formA)) - formScore(pad5(m.formB));
+  const p = 1/(1+Math.pow(10,-d/400)); return Math.min(0.97,Math.max(0.03,0.5+(p-0.5)*coef));
+}
+async function refreshLive(force){
+  if(liveBusy) return; liveBusy=true; liveErr=null; renderTour();
+  try{ if(!window.VBT_AUTO) throw new Error("module absent");
+    const r=await VBT_AUTO.load({force, page:tourPage});
+    if(r.error) liveErr=r.error; else { LIVE=r; tourPage=r.ev.page; LS.set("vbt_live",{...r,rank:null}); }
+  }catch(e){ liveErr="Sources injoignables pour le moment : affichage de la dernière mise à jour."; console.warn(e); }
+  liveBusy=false; renderTour(); if(!$("tab-players").classList.contains("hide")) renderPlayers();
 }
 function renderTour(){
-  $("tourNom").textContent="🏆 "+TOURNOI.nom; $("tourLieu").textContent=TOURNOI.lieu+" · points BWF "+RANK_WEEK;
-  const counts={}; TOURNOI.matchs.forEach(m=>counts[m.disc]=(counts[m.disc]||0)+1);
+  const T=curT();
+  $("tourNom").textContent="🏆 "+T.nom;
+  const upd = LIVE ? "Mis à jour "+new Date(LIVE.ts).toLocaleString("fr-FR",{weekday:"short",hour:"2-digit",minute:"2-digit"})+" · points BWF officiels" : "Données intégrées (hors ligne)";
+  $("tourLieu").innerHTML = esc(T.lieu)+"<br>"+(liveBusy?"⏳ Mise à jour en cours…":esc(upd))+(liveErr?`<br><span style="color:var(--ko)">⚠️ ${esc(liveErr)}</span>`:"");
+  const evs = LIVE?.events||[];
+  $("tourEvents").innerHTML = evs.length>1 ? evs.map(e=>`<button class="chip ${LIVE&&e.page===LIVE.ev.page?"on":""}" data-p="${esc(e.page)}">${esc(e.name)}</button>`).join("") : "";
+  $("tourEvents").querySelectorAll("button").forEach(b=>b.onclick=()=>{tourPage=b.dataset.p; refreshLive(false);});
+  const counts={}; T.matchs.forEach(m=>{ if(showDone||!m.done) counts[m.disc]=(counts[m.disc]||0)+1; });
+  if(!counts[tourDisc]) tourDisc = Object.keys(DISCS).find(k=>counts[k]) || tourDisc;
   $("tourDisc").innerHTML=Object.entries(DISCS).filter(([k])=>counts[k]).map(([k,v])=>`<button class="chip ${k===tourDisc?"on":""}" data-d="${k}">${v.nom} (${counts[k]})</button>`).join("");
   $("tourDisc").querySelectorAll("button").forEach(b=>b.onclick=()=>{tourDisc=b.dataset.d;renderTour();});
-  const list=TOURNOI.matchs.map((m,i)=>({...m,i})).filter(m=>m.disc===tourDisc);
-  const rounds=[...new Set(list.map(m=>m.round))];
-  $("tourList").innerHTML=rounds.map(r=>`<div class="card"><h2>${esc(r)}</h2>`+list.filter(m=>m.round===r).map(m=>{
-    const p=probMatch(m), fA=p>=0.5, pf=Math.max(p,1-p);
+  $("showDone").textContent = showDone ? "Masquer les matchs terminés" : "Voir aussi les matchs terminés (bilan)";
+  const list=T.matchs.map((m,i)=>({...m,i})).filter(m=>m.disc===tourDisc && (showDone||!m.done));
+  const order=["1er tour","2e tour","Quart","Demi","Finale"];
+  const rounds=[...new Set(list.map(m=>m.round))].sort((a,b)=>order.indexOf(b)-order.indexOf(a));
+  let bilan="";
+  if(showDone){ const d=T.matchs.filter(m=>m.done&&m.win); const ok=d.filter(m=>(probMatch(m,T.coef)>=0.5)===(m.win==="A")).length;
+    if(d.length) bilan=`<div class="card"><h2>Bilan des pronos sur ce tournoi</h2><div class="stats"><div><b>${Math.round(100*ok/d.length)} %</b><span>favori gagnant</span></div><div><b>${ok}</b><span>bons</span></div><div><b>${d.length-ok}</b><span>surprises</span></div></div></div>`; }
+  $("tourList").innerHTML = bilan + (rounds.length? rounds.map(r=>`<div class="card"><h2>${esc(r)}</h2>`+list.filter(m=>m.round===r).map(m=>{
+    const p=probMatch(m,T.coef), fA=p>=0.5, pf=Math.max(p,1-p);
     const conf = pf>0.75?["Favori net","ok"]:pf>0.6?["Avantage","mid"]:["Serré","ko"];
-    return `<div class="hist" data-open="${m.i}" style="cursor:pointer">
+    const res = m.done ? (m.win ? ((m.win==="A")===fA ? `<span class="badge ok">✔ Prono juste · ${esc(m.score)}</span>` : `<span class="badge ko">✘ Surprise · ${esc(m.score)}</span>`) : `<span class="badge mid">Terminé</span>`) : "";
+    const tags = [ (m.fatA?"😓 fatigue A":""), (m.fatB?"😓 fatigue B":"") ].filter(Boolean).join(" · ");
+    return `<div class="hist" data-open="${m.i}" style="cursor:pointer;${m.done?"opacity:.75":""}">
       <div class="names" style="display:flex;justify-content:space-between;gap:8px;font-size:14px">
-        <div style="color:var(--a);${fA?"font-weight:800":"opacity:.8"}">${esc(m.A)}${m.home==="A"?" 🏠":""}</div>
-        <div style="color:var(--b);text-align:right;${!fA?"font-weight:800":"opacity:.8"}">${m.home==="B"?"🏠 ":""}${esc(m.B)}</div></div>
+        <div style="color:var(--a);${fA?"font-weight:800":"opacity:.8"}">${m.win==="A"?"🏆 ":""}${esc(m.A)}${m.home==="A"?" 🏠":""}</div>
+        <div style="color:var(--b);text-align:right;${!fA?"font-weight:800":"opacity:.8"}">${m.home==="B"?"🏠 ":""}${esc(m.B)}${m.win==="B"?" 🏆":""}</div></div>
       <div class="big" style="margin:4px 0"><b class="a" style="font-size:24px">${Math.round(p*100)} %</b><span class="badge ${conf[1]}">${conf[0]} · cote juste ${(1/pf).toFixed(2)}</span><b class="b" style="font-size:24px">${Math.round((1-p)*100)} %</b></div>
       <div class="bar" style="height:8px"><i class="ia" style="width:${p*100}%"></i><i class="ib" style="width:${(1-p)*100}%"></i></div>
+      ${res?`<div style="margin-top:6px">${res}</div>`:""}
+      ${tags?`<div class="hint">${tags} (long match la veille)</div>`:""}
       ${m.note?`<div class="hint">ℹ️ ${esc(m.note)}</div>`:""}
-    </div>`;}).join("")+`</div>`).join("");
-  $("tourList").querySelectorAll("[data-open]").forEach(el=>el.onclick=()=>openMatch(TOURNOI.matchs[+el.dataset.open]));
+    </div>`;}).join("")+`</div>`).join("") : `<div class="card"><div class="hint">Aucun match à venir dans ce tableau pour l'instant. Touche « Voir aussi les matchs terminés » ou reviens plus tard.</div></div>`);
+  $("tourList").querySelectorAll("[data-open]").forEach(el=>el.onclick=()=>openMatch(T.matchs[+el.dataset.open], T.coef));
 }
-function openMatch(m){
-  S.disc=m.disc; S.A={...blank(),name:m.A,pts:m.ptsA}; S.B={...blank(),name:m.B,pts:m.ptsB}; S.home=m.home||"0";
+function openMatch(m, coef){
+  S.disc=m.disc;
+  S.A={...blank(),name:m.A,pts:m.ptsA,rank:m.rankA||"",form:pad5(m.formA),fat:m.fatA||0};
+  S.B={...blank(),name:m.B,pts:m.ptsB,rank:m.rankB||"",form:pad5(m.formB),fat:m.fatB||0};
+  S.home=m.home||"0";
   ["h2hA","h2hB"].forEach(i=>$(i).value=0); ["oddA","oddB"].forEach(i=>$(i).value=""); $("feel").value=0;
-  $("level").value=TOURNOI.level;
+  $("level").value=String(coef);
   const r=[...$("round").options].find(o=>o.text===m.round); if(r) $("round").value=r.value;
   renderAll(); showTab("prono");
 }
@@ -528,8 +573,13 @@ function toast(t){
   document.body.appendChild(d); setTimeout(()=>d.remove(),1600);
 }
 
+$("refresh").onclick=()=>refreshLive(true);
+$("showDone").onclick=()=>{showDone=!showDone;renderTour();};
+LIVE = LS.get("vbt_live", null);   // dernière mise à jour connue (pour l'affichage immédiat / hors ligne)
+if(LIVE) tourPage=LIVE.ev?.page||null;
 renderAll();
 renderTour();
+refreshLive(false);
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
